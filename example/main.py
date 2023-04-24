@@ -1,15 +1,19 @@
 # main.py
 # Some ports need to import 'sleep' from 'time' module
-from machine import sleep, SoftI2C, Pin
+import time
+from time import sleep
+from machine import SoftI2C, Pin
 from utime import ticks_diff, ticks_us
-
+from heartbeat import HeartBeat
 from max30102 import MAX30102, MAX30105_PULSE_AMP_MEDIUM
-
 
 def main():
     # I2C software instance
-    i2c = SoftI2C(sda=Pin(22),  # Here, use your I2C SDA pin
-                  scl=Pin(21),  # Here, use your I2C SCL pin
+    led = Pin('LED', Pin.OUT)
+    led.on()
+
+    i2c = SoftI2C(sda=Pin(16),  # Here, use your I2C SDA pin
+                  scl=Pin(17),  # Here, use your I2C SCL pin
                   freq=400000)  # Fast: 400kHz, slow: 100kHz
 
     # Examples of working I2C configurations:
@@ -54,7 +58,6 @@ def main():
     sensor.set_active_leds_amplitude(MAX30105_PULSE_AMP_MEDIUM)
 
     sleep(1)
-
     # The readTemperature() method allows to extract the die temperature in °C    
     print("Reading temperature in °C.", '\n')
     print(sensor.read_temperature())
@@ -68,7 +71,10 @@ def main():
     t_start = ticks_us()  # Starting time of the acquisition
     samples_n = 0  # Number of samples that have been collected
 
+    hb = HeartBeat()
+    led.toggle()
     while True:
+        
         # The check() method has to be continuously polled, to check if
         # there are new readings into the sensor's FIFO queue. When new
         # readings are available, this function will put them into the storage.
@@ -81,7 +87,8 @@ def main():
             ir_reading = sensor.pop_ir_from_storage()
 
             # Print the acquired data (so that it can be plotted with a Serial Plotter)
-            print(red_reading, ",", ir_reading)
+            #print(red_reading, ",", ir_reading)
+            hb.calculate_btm(red_reading, ir_reading)
 
             # Compute the real frequency at which we receive data
             if compute_frequency:
@@ -90,8 +97,11 @@ def main():
                     samples_n = 0
                     print("acquisition frequency = ", f_HZ)
                     t_start = ticks_us()
+                    led.toggle()
                 else:
                     samples_n = samples_n + 1
+            
+        
 
 
 if __name__ == '__main__':

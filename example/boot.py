@@ -14,8 +14,8 @@ def do_connect(ssid: str, password: str):
 
 if __name__ == '__main__':
     # Put yor Wi-Fi credentials here
-    my_ssid = "my_ssid"
-    my_pass = "my_password"
+    my_ssid = "minijini"
+    my_pass = "gusalsguswls1"
 
     # Check if the module is available in memory
     try:
